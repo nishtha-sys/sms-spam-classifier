@@ -43,6 +43,13 @@ The model converts text into numerical features using **TF-IDF Vectorization** a
 
 The project uses the [UCI SMS Spam Collection Dataset](https://archive.ics.uci.edu/dataset/228/sms+spam+collection), containing 5,574 labelled SMS messages.
 
+Run Locally-
+git clone https://github.com/nishtha-sys/sms-spam-classifier.git
+cd sms-spam-classifier
+pip install -r requirements.txt
+streamlit run app.py
+
+
 ## Project Structure
 
 ```text
@@ -54,9 +61,3 @@ sms-spam-classifier/
 ├── README.md              # Project documentation
 └── notebooks/
     └── SMS_Spam_Classifier.ipynb
-
-RUN LOCALLY :-
-git clone https://github.com/nishtha-sys/sms-spam-classifier.git
-cd sms-spam-classifier
-pip install -r requirements.txt
-streamlit run app.py
