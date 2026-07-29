@@ -54,3 +54,9 @@ sms-spam-classifier/
 ├── README.md              # Project documentation
 └── notebooks/
     └── SMS_Spam_Classifier.ipynb
+
+RUN LOCALLY :-
+git clone https://github.com/nishtha-sys/sms-spam-classifier.git
+cd sms-spam-classifier
+pip install -r requirements.txt
+streamlit run app.py
