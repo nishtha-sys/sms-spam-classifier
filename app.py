@@ -114,6 +114,26 @@ with st.expander("ℹ️ How this works"):
         """
     )
 
+import random
+
+SPAM_EXAMPLES = [
+    "Congratulations! You've won a free iPhone. Click here to claim now.",
+    "URGENT! Your mobile number has won £2000 in our prize draw. Call 09061701461 now.",
+    "FREE entry to win a brand new iPhone. Text WIN to 80086 now, limited slots!",
+    "You have been selected for a cash loan of $5000. No credit check needed. Reply YES.",
+    "Your account will be suspended. Verify your details immediately at this link.",
+    "Congrats! You've been selected to receive a free cruise vacation. Call now to claim your spot.",
+]
+
+HAM_EXAMPLES = [
+    "Hey, are we still meeting for lunch tomorrow?",
+    "Don't forget to submit the assignment before 5 PM today.",
+    "Can you send me the notes from today's class?",
+    "Mom, I'll be home late tonight, don't wait for dinner.",
+    "Meeting rescheduled to 3 PM, please update your calendar.",
+    "Happy birthday! Hope you have an amazing day",
+]
+
 # ---------- Example buttons ----------
 st.write("**Try an example:**")
 col1, col2 = st.columns(2)
@@ -121,11 +141,11 @@ example_message = None
 
 with col1:
     if st.button("🚨 Try a spam example"):
-        example_message = "Congratulations! You've won a free iPhone. Click here to claim now."
+        example_message = random.choice(SPAM_EXAMPLES)
 
 with col2:
     if st.button("✅ Try a normal example"):
-        example_message = "Hey, are we still meeting for lunch tomorrow?"
+        example_message = random.choice(HAM_EXAMPLES)
 
 # ---------- Session state for message box ----------
 if "message_input" not in st.session_state:
