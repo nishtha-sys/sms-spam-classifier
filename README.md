@@ -8,16 +8,19 @@ A machine learning web app that classifies SMS messages as **Spam** or **Ham (No
 
 ## 📝 Project Description
 
-This project trains a text classification model to detect spam SMS messages using classic NLP techniques. The model is trained in Google Colab and deployed as an interactive web app using Streamlit Community Cloud, allowing users to test any custom message in real time.
+This project trains a text classification model to detect spam SMS messages using TF-IDF feature extraction and Logistic Regression. The model is trained in Google Colab and deployed as an interactive, styled web app using Streamlit Community Cloud, allowing users to test any custom message in real time.
 
 ---
 
 ## ✨ Features
 
 - Classifies any custom SMS/text message as **Spam** or **Ham**
-- Simple, interactive Streamlit web interface
+- Color-coded results with a visual confidence gauge (green/orange/red based on risk level)
+- "Try an example" buttons with randomized spam/ham sample messages
+- Session history — tracks recent checks during your session
+- Expandable "How this works" section explaining the model in plain language
+- Sidebar with live project stats, tech stack, and links
 - Fast predictions using a pre-trained model (no retraining on the live app)
-- Clean TF-IDF + Naive Bayes pipeline
 
 ---
 
@@ -25,8 +28,8 @@ This project trains a text classification model to detect spam SMS messages usin
 
 - **Language:** Python 3.12
 - **ML Library:** scikit-learn
-- **Text Vectorization:** TF-IDF
-- **Model:** Multinomial Naive Bayes
+- **Text Vectorization:** TF-IDF (unigrams + bigrams)
+- **Model:** Logistic Regression (class-balanced)
 - **Web Framework:** Streamlit
 - **Prototyping:** Google Colab, Gradio (initial demo)
 - **Deployment:** Streamlit Community Cloud
@@ -35,18 +38,20 @@ This project trains a text classification model to detect spam SMS messages usin
 
 ## 📊 Model Performance
 
-**Accuracy: 97.04%**
+**Accuracy: 98.3%**
 
 ### Confusion Matrix
 
 | | Predicted Ham | Predicted Spam |
 |---|---|---|
-| **Actual Ham** | 966 | 0 |
-| **Actual Spam** | 33 | 116 |
+| **Actual Ham** | 958 | 8 |
+| **Actual Spam** | 11 | 138 |
 
-- ✅ 0 ham messages incorrectly flagged as spam (no false positives)
-- ✅ 116 spam messages correctly caught
-- ⚠️ 33 spam messages missed (false negatives)
+- ✅ 138 spam messages correctly caught (up from 116 in the initial version)
+- ✅ Missed spam reduced from 33 → 11 messages
+- ⚠️ 8 ham messages incorrectly flagged as spam (a small, deliberate trade-off for significantly better spam recall)
+
+**Model iteration notes:** the original version used unigram TF-IDF with Multinomial Naive Bayes (97.04% accuracy, 33 missed spam messages). Switching to bigram TF-IDF + Logistic Regression with class balancing improved spam recall substantially, at the cost of a small increase in false positives — a worthwhile trade-off for a spam filter.
 
 ---
 
@@ -61,7 +66,7 @@ This project trains a text classification model to detect spam SMS messages usin
 ```
 sms-spam-classifier/
 ├── app.py                          # Streamlit app (loads trained model, runs predictions)
-├── spam_model.pkl                  # Pre-trained TF-IDF + Naive Bayes model
+├── spam_model.pkl                  # Pre-trained TF-IDF + Logistic Regression pipeline
 ├── requirements.txt                # Python dependencies
 ├── notebooks/
 │   └── SMS_Spam_Classifier.ipynb   # Full training workflow (source of truth)
@@ -97,6 +102,6 @@ sms-spam-classifier/
 
 ## 🚀 Future Improvements
 
-- Improve recall on spam detection (reduce false negatives)
-- Enhance UI/UX design
-- Experiment with additional models (SVM, ensemble methods)
+- Explore transformer-based models (e.g. fine-tuned BERT) for a modern deep-learning comparison
+- Add batch message upload/testing
+- Expand training data beyond the UCI dataset for more real-world robustness
