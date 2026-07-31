@@ -171,4 +171,3 @@ if st.session_state.get("history"):
 
 st.markdown("---")
 st.caption("Built with Python, scikit-learn, and Streamlit.")
-'@ | Set-Content -Path "app.py" -Encoding UTF8
