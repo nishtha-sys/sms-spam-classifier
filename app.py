@@ -162,13 +162,15 @@ message = st.text_area(
     height=120,
 )
 
+def clear_message():
+    st.session_state.message_input = ""
+
+
 btn_col1, btn_col2 = st.columns([3, 1])
 with btn_col1:
     check_clicked = st.button("Check message", type="primary")
 with btn_col2:
-    if st.button("Clear"):
-        st.session_state.message_input = ""
-        st.rerun()
+    st.button("Clear", on_click=clear_message)
 
 # ---------- Prediction ----------
 if check_clicked:
