@@ -51,12 +51,14 @@ st.markdown(
         margin-bottom: 1rem;
     }
     .spam-card {
-        background-color: #FEE2E2;
-        border: 1px solid #FCA5A5;
+        background-color: #DC2626;
+        border: 1px solid #B91C1C;
+        color: #FFFFFF;
     }
     .ham-card {
-        background-color: #DCFCE7;
-        border: 1px solid #86EFAC;
+        background-color: #16A34A;
+        border: 1px solid #15803D;
+        color: #FFFFFF;
     }
     .result-title {
         font-size: 1.3rem;
