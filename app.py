@@ -198,17 +198,23 @@ if check_clicked:
         )
         st.caption(f"{spam_probability:.2%} likelihood of being spam")
 
-        # Keep a simple session history
+        # Keep a simple session history (skip if identical to the last entry)
         if "history" not in st.session_state:
             st.session_state.history = []
-        st.session_state.history.insert(
-            0,
-            {
-                "message": message,
-                "result": "Spam" if prediction == 1 else "Ham",
-                "probability": spam_probability,
-            },
+
+        is_duplicate = (
+            st.session_state.history
+            and st.session_state.history[0]["message"] == message
         )
+        if not is_duplicate:
+            st.session_state.history.insert(
+                0,
+                {
+                    "message": message,
+                    "result": "Spam" if prediction == 1 else "Ham",
+                    "probability": spam_probability,
+                },
+            )
 
 # ---------- History ----------
 if st.session_state.get("history"):
