@@ -40,6 +40,24 @@ def predict_bert(message, tokenizer, model):
     return prediction, spam_prob
 
 
+def get_top_spam_words(message, sklearn_pipeline, top_n=5):
+    """Return the words/phrases in this message that most pushed the prediction toward spam."""
+    vectorizer = sklearn_pipeline.named_steps["vectorizer"]
+    classifier = sklearn_pipeline.named_steps["classifier"]
+
+    features = vectorizer.transform([message])
+    feature_names = vectorizer.get_feature_names_out()
+    coefficients = classifier.coef_[0]
+
+    nonzero_indices = features.nonzero()[1]
+    contributions = [
+        (feature_names[i], features[0, i] * coefficients[i])
+        for i in nonzero_indices
+    ]
+    contributions.sort(key=lambda x: x[1], reverse=True)
+    return [word for word, score in contributions[:top_n] if score > 0]
+
+
 sklearn_model = load_sklearn_model()
 
 # ---------- Custom styling ----------
@@ -80,6 +98,11 @@ st.markdown(
     .ham-card {
         background-color: #16A34A;
         border: 1px solid #15803D;
+        color: #FFFFFF;
+    }
+    .uncertain-card {
+        background-color: #CA8A04;
+        border: 1px solid #A16207;
         color: #FFFFFF;
     }
     .result-title {
@@ -217,7 +240,17 @@ if check_clicked:
             prediction = sklearn_model.predict([message])[0]
             spam_probability = sklearn_model.predict_proba([message])[0][1]
 
-        if prediction == 1:
+        if 0.45 <= spam_probability <= 0.55:
+            st.markdown(
+                f"""
+                <div class="result-card uncertain-card">
+                    <div class="result-title">🤔 Uncertain — needs review</div>
+                    <div>This message is borderline. The model isn't confident either way — consider reviewing it manually.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        elif prediction == 1:
             st.markdown(
                 f"""
                 <div class="result-card spam-card">
@@ -227,6 +260,10 @@ if check_clicked:
                 """,
                 unsafe_allow_html=True,
             )
+            if "DistilBERT" not in model_choice:
+                top_words = get_top_spam_words(message, sklearn_model)
+                if top_words:
+                    st.caption("🔍 Words that most influenced this result: " + ", ".join(f"**{w}**" for w in top_words))
         else:
             st.markdown(
                 f"""
@@ -261,18 +298,25 @@ if check_clicked:
         if "history" not in st.session_state:
             st.session_state.history = []
 
+        current_model_label = "DistilBERT" if "DistilBERT" in model_choice else "Logistic Regression"
+        if 0.45 <= spam_probability <= 0.55:
+            result_label = "Uncertain"
+        else:
+            result_label = "Spam" if prediction == 1 else "Ham"
+
         is_duplicate = (
             st.session_state.history
             and st.session_state.history[0]["message"] == message
+            and st.session_state.history[0]["model"] == current_model_label
         )
         if not is_duplicate:
             st.session_state.history.insert(
                 0,
                 {
                     "message": message,
-                    "result": "Spam" if prediction == 1 else "Ham",
+                    "result": result_label,
                     "probability": spam_probability,
-                    "model": "DistilBERT" if "DistilBERT" in model_choice else "Logistic Regression",
+                    "model": current_model_label,
                 },
             )
 
@@ -281,8 +325,66 @@ if st.session_state.get("history"):
     st.markdown("---")
     st.subheader("🕒 Recent checks (this session)")
     for item in st.session_state.history[:5]:
-        icon = "🚨" if item["result"] == "Spam" else "✅"
+        if item["result"] == "Spam":
+            icon = "🚨"
+        elif item["result"] == "Ham":
+            icon = "✅"
+        else:
+            icon = "🤔"
         st.write(f"{icon} **{item['result']}** ({item['probability']:.1%}) — *{item['model']}* — {item['message'][:60]}{'...' if len(item['message']) > 60 else ''}")
+
+st.markdown("---")
+st.subheader("📂 Batch check (upload a CSV or TXT file)")
+st.caption("CSV should have one column of messages (any header name). TXT should have one message per line.")
+
+uploaded_file = st.file_uploader("Upload file", type=["csv", "txt"], label_visibility="collapsed")
+
+if uploaded_file is not None:
+    import pandas as pd
+    import io
+
+    if uploaded_file.name.endswith(".csv"):
+        batch_df = pd.read_csv(uploaded_file)
+        message_col = batch_df.columns[0]
+        messages_list = batch_df[message_col].astype(str).tolist()
+    else:
+        content = uploaded_file.read().decode("utf-8")
+        messages_list = [line.strip() for line in content.splitlines() if line.strip()]
+
+    st.write(f"Found **{len(messages_list)}** messages.")
+
+    if st.button("Classify all messages"):
+        with st.spinner(f"Classifying {len(messages_list)} messages..."):
+            results = []
+            use_bert = "DistilBERT" in model_choice
+            if use_bert:
+                tokenizer, bert_model = load_bert_model()
+
+            for msg in messages_list:
+                if use_bert:
+                    pred, prob = predict_bert(msg, tokenizer, bert_model)
+                else:
+                    pred = sklearn_model.predict([msg])[0]
+                    prob = sklearn_model.predict_proba([msg])[0][1]
+
+                if 0.45 <= prob <= 0.55:
+                    label = "Uncertain"
+                else:
+                    label = "Spam" if pred == 1 else "Ham"
+
+                results.append({"message": msg, "prediction": label, "spam_probability": round(prob, 4)})
+
+            results_df = pd.DataFrame(results)
+            st.dataframe(results_df, use_container_width=True)
+
+            csv_buffer = io.StringIO()
+            results_df.to_csv(csv_buffer, index=False)
+            st.download_button(
+                "⬇️ Download results as CSV",
+                data=csv_buffer.getvalue(),
+                file_name="spam_classification_results.csv",
+                mime="text/csv",
+            )
 
 st.markdown("---")
 st.caption("Built with Python, scikit-learn, and Streamlit.")
