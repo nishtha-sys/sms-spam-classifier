@@ -334,10 +334,10 @@ if st.session_state.get("history"):
         st.write(f"{icon} **{item['result']}** ({item['probability']:.1%}) — *{item['model']}* — {item['message'][:60]}{'...' if len(item['message']) > 60 else ''}")
 
 st.markdown("---")
-st.subheader("📂 Batch check (upload a CSV or TXT file)")
-st.caption("CSV should have one column of messages (any header name). TXT should have one message per line.")
+st.subheader("📂 Batch check (upload a CSV, TXT, or PDF file)")
+st.caption("CSV should have one column of messages (any header name). TXT/PDF should have one message per line.")
 
-uploaded_file = st.file_uploader("Upload file", type=["csv", "txt"], label_visibility="collapsed")
+uploaded_file = st.file_uploader("Upload file", type=["csv", "txt", "pdf"], label_visibility="collapsed")
 
 if uploaded_file is not None:
     import pandas as pd
@@ -347,6 +347,14 @@ if uploaded_file is not None:
         batch_df = pd.read_csv(uploaded_file)
         message_col = batch_df.columns[0]
         messages_list = batch_df[message_col].astype(str).tolist()
+    elif uploaded_file.name.endswith(".pdf"):
+        from pypdf import PdfReader
+
+        reader = PdfReader(uploaded_file)
+        full_text = ""
+        for page in reader.pages:
+            full_text += page.extract_text() or ""
+        messages_list = [line.strip() for line in full_text.splitlines() if line.strip()]
     else:
         content = uploaded_file.read().decode("utf-8")
         messages_list = [line.strip() for line in content.splitlines() if line.strip()]
