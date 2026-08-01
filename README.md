@@ -1,4 +1,4 @@
-# 📩 SMS Spam Classifier
+# 📩 SpamShield: Classical ML vs Transformers
 
 A machine learning web app that classifies SMS messages as **Spam** or **Ham (Not Spam)** — with a live toggle to compare a classical ML pipeline against a fine-tuned transformer model.
 
