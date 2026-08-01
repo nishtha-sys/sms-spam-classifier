@@ -1,6 +1,9 @@
 from pathlib import Path
 import joblib
 import streamlit as st
+import random
+import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # ---------- Page config ----------
 st.set_page_config(
@@ -11,14 +14,33 @@ st.set_page_config(
 )
 
 MODEL_PATH = Path(__file__).parent / "spam_model.pkl"
+HF_MODEL_NAME = "nishthasahani/sms-spam-distilbert"
 
 
 @st.cache_resource
-def load_model():
+def load_sklearn_model():
     return joblib.load(MODEL_PATH)
 
 
-model = load_model()
+@st.cache_resource
+def load_bert_model():
+    tokenizer = AutoTokenizer.from_pretrained(HF_MODEL_NAME)
+    model = AutoModelForSequenceClassification.from_pretrained(HF_MODEL_NAME)
+    model.eval()
+    return tokenizer, model
+
+
+def predict_bert(message, tokenizer, model):
+    inputs = tokenizer(message, return_tensors="pt", truncation=True, padding=True, max_length=64)
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = torch.softmax(outputs.logits, dim=1)[0]
+    spam_prob = probs[1].item()
+    prediction = 1 if spam_prob > 0.5 else 0
+    return prediction, spam_prob
+
+
+sklearn_model = load_sklearn_model()
 
 # ---------- Custom styling ----------
 st.markdown(
@@ -89,9 +111,21 @@ with st.sidebar:
         "A machine learning model that classifies SMS messages as "
         "**Spam** or **Ham (Not Spam)**."
     )
-    st.metric("Model Accuracy", "98.3%")
-    st.markdown("**Tech stack:** scikit-learn · TF-IDF · Logistic Regression · Streamlit")
     st.markdown("---")
+    st.subheader("🧠 Choose a model")
+    model_choice = st.radio(
+        "Model",
+        ["⚡ Fast (Logistic Regression)", "🎯 Accurate (DistilBERT)"],
+        label_visibility="collapsed",
+    )
+    if "DistilBERT" in model_choice:
+        st.metric("Model Accuracy", "99.0%")
+        st.caption("Transformer-based, higher accuracy, slightly slower")
+    else:
+        st.metric("Model Accuracy", "98.3%")
+        st.caption("TF-IDF + Logistic Regression, instant predictions")
+    st.markdown("---")
+    st.markdown("**Tech stack:** scikit-learn · Transformers · Streamlit")
     st.markdown("[📂 View source on GitHub](https://github.com/nishtha-sys/sms-spam-classifier)")
     st.markdown("**Dataset:** [UCI SMS Spam Collection](https://archive.ics.uci.edu/dataset/228/sms+spam+collection)")
 
@@ -113,8 +147,6 @@ with st.expander("ℹ️ How this works"):
           harder to classify, just like for a human reader.
         """
     )
-
-import random
 
 SPAM_EXAMPLES = [
     "Congratulations! You've won a free iPhone. Click here to claim now.",
@@ -177,8 +209,13 @@ if check_clicked:
     if not message.strip():
         st.warning("Please enter a message.")
     else:
-        prediction = model.predict([message])[0]
-        spam_probability = model.predict_proba([message])[0][1]
+        if "DistilBERT" in model_choice:
+            with st.spinner("Loading DistilBERT model (first run takes a moment)..."):
+                tokenizer, bert_model = load_bert_model()
+            prediction, spam_probability = predict_bert(message, tokenizer, bert_model)
+        else:
+            prediction = sklearn_model.predict([message])[0]
+            spam_probability = sklearn_model.predict_proba([message])[0][1]
 
         if prediction == 1:
             st.markdown(
@@ -235,6 +272,7 @@ if check_clicked:
                     "message": message,
                     "result": "Spam" if prediction == 1 else "Ham",
                     "probability": spam_probability,
+                    "model": "DistilBERT" if "DistilBERT" in model_choice else "Logistic Regression",
                 },
             )
 
@@ -244,7 +282,7 @@ if st.session_state.get("history"):
     st.subheader("🕒 Recent checks (this session)")
     for item in st.session_state.history[:5]:
         icon = "🚨" if item["result"] == "Spam" else "✅"
-        st.write(f"{icon} **{item['result']}** ({item['probability']:.1%}) — {item['message'][:70]}{'...' if len(item['message']) > 70 else ''}")
+        st.write(f"{icon} **{item['result']}** ({item['probability']:.1%}) — *{item['model']}* — {item['message'][:60]}{'...' if len(item['message']) > 60 else ''}")
 
 st.markdown("---")
 st.caption("Built with Python, scikit-learn, and Streamlit.")
