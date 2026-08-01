@@ -1,6 +1,6 @@
 # 📩 SMS Spam Classifier
 
-A machine learning web app that classifies SMS messages as **Spam** or **Ham (Not Spam)**, built with scikit-learn and deployed using Streamlit.
+A machine learning web app that classifies SMS messages as **Spam** or **Ham (Not Spam)** — with a live toggle to compare a classical ML pipeline against a fine-tuned transformer model.
 
 🔗 **Live App:** [nishtha-sms-spam-classifier.streamlit.app](https://nishtha-sms-spam-classifier.streamlit.app)
 
@@ -8,29 +8,34 @@ A machine learning web app that classifies SMS messages as **Spam** or **Ham (No
 
 ## 📝 Project Description
 
-This project trains a text classification model to detect spam SMS messages using TF-IDF feature extraction and Logistic Regression. The model is trained in Google Colab and deployed as an interactive, styled web app using Streamlit Community Cloud, allowing users to test any custom message in real time.
+This project detects spam SMS messages using two different approaches, side by side:
+
+- **Fast model:** TF-IDF (unigrams + bigrams) + Logistic Regression
+- **Accurate model:** Fine-tuned DistilBERT transformer, hosted on [Hugging Face Hub](https://huggingface.co/nishthasahani/sms-spam-distilbert)
+
+Users can switch between the two in real time and compare predictions, confidence scores, and speed — a practical demonstration of the classical-ML-vs-transformer trade-off.
 
 ---
 
 ## ✨ Features
 
 - Classifies any custom SMS/text message as **Spam** or **Ham**
+- **Model toggle** — switch between Logistic Regression and DistilBERT instantly
 - Color-coded results with a visual confidence gauge (green/orange/red based on risk level)
 - "Try an example" buttons with randomized spam/ham sample messages
-- Session history — tracks recent checks during your session
-- Expandable "How this works" section explaining the model in plain language
+- Session history — tracks recent checks, tagged with which model was used
+- Expandable "How this works" section explaining both models in plain language
 - Sidebar with live project stats, tech stack, and links
-- Fast predictions using a pre-trained model (no retraining on the live app)
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Language:** Python 3.12
-- **ML Library:** scikit-learn
-- **Text Vectorization:** TF-IDF (unigrams + bigrams)
-- **Model:** Logistic Regression (class-balanced)
+- **Classical ML:** scikit-learn — TF-IDF (unigrams + bigrams) + Logistic Regression
+- **Deep Learning:** Hugging Face Transformers — fine-tuned DistilBERT
 - **Web Framework:** Streamlit
+- **Model Hosting:** Hugging Face Hub
 - **Prototyping:** Google Colab, Gradio (initial demo)
 - **Deployment:** Streamlit Community Cloud
 
@@ -38,20 +43,18 @@ This project trains a text classification model to detect spam SMS messages usin
 
 ## 📊 Model Performance
 
-**Accuracy: 98.3%**
-
-### Confusion Matrix
-
-| | Predicted Ham | Predicted Spam |
+| Metric | Logistic Regression | DistilBERT |
 |---|---|---|
-| **Actual Ham** | 958 | 8 |
-| **Actual Spam** | 11 | 138 |
+| Accuracy | 98.3% | **99.0%** |
+| Ham correctly identified | 958 | 962 |
+| Ham misclassified as spam | 8 | **4** |
+| Spam correctly identified | 138 | **143** |
+| Spam missed | 11 | **6** |
+| ROC-AUC | — | 0.996 |
 
-- ✅ 138 spam messages correctly caught (up from 116 in the initial version)
-- ✅ Missed spam reduced from 33 → 11 messages
-- ⚠️ 8 ham messages incorrectly flagged as spam (a small, deliberate trade-off for significantly better spam recall)
+**Iteration history:** the project started with unigram TF-IDF + Multinomial Naive Bayes (97.04% accuracy, 33 missed spam messages). Switching to bigram TF-IDF + Logistic Regression with class balancing cut missed spam to 11. Fine-tuning DistilBERT improved on both false positives and false negatives simultaneously — a rare case where a more complex model didn't require a trade-off.
 
-**Model iteration notes:** the original version used unigram TF-IDF with Multinomial Naive Bayes (97.04% accuracy, 33 missed spam messages). Switching to bigram TF-IDF + Logistic Regression with class balancing improved spam recall substantially, at the cost of a small increase in false positives — a worthwhile trade-off for a spam filter.
+**Known limitation:** the training data (UCI SMS Spam Collection) was compiled around 2011-2012 and reflects spam patterns from that era (premium-rate scams, ringtone subscriptions, etc.). Modern smishing patterns (phishing links, fake delivery notifications, OTP fraud) are underrepresented, so both models may underperform on contemporary spam styles not well reflected in this dataset.
 
 ---
 
@@ -65,7 +68,7 @@ This project trains a text classification model to detect spam SMS messages usin
 
 ```
 sms-spam-classifier/
-├── app.py                          # Streamlit app (loads trained model, runs predictions)
+├── app.py                          # Streamlit app with dual-model toggle
 ├── spam_model.pkl                  # Pre-trained TF-IDF + Logistic Regression pipeline
 ├── requirements.txt                # Python dependencies
 ├── notebooks/
@@ -74,7 +77,7 @@ sms-spam-classifier/
 └── .gitignore
 ```
 
-> **Note:** The deployed app only uses `app.py`, `spam_model.pkl`, and `requirements.txt`. It loads the pre-trained model and does **not** retrain on load. All training was done in the Colab notebook above.
+> **Note:** The DistilBERT model (~268MB) is hosted on Hugging Face Hub rather than committed to this repo, and is loaded at runtime. The app only needs `app.py`, `spam_model.pkl`, and `requirements.txt` to run.
 
 ---
 
@@ -102,6 +105,6 @@ sms-spam-classifier/
 
 ## 🚀 Future Improvements
 
-- Explore transformer-based models (e.g. fine-tuned BERT) for a modern deep-learning comparison
+- Add a FastAPI backend + database to log predictions and separate the ML layer from the UI
+- Expand training data with more contemporary spam/smishing examples
 - Add batch message upload/testing
-- Expand training data beyond the UCI dataset for more real-world robustness
