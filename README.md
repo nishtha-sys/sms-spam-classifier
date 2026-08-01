@@ -4,7 +4,7 @@ A machine learning web app that classifies SMS messages as **Spam** or **Ham (No
 
 🔗 **Live App:** [nishtha-sms-spam-classifier.streamlit.app](https://nishtha-sms-spam-classifier.streamlit.app)
 
-Huggingface-(https://huggingface.co/nishthasahani/sms-spam-distilbert)
+Huggingface-https://huggingface.co/nishthasahani/sms-spam-distilbert
 
 ---
 
