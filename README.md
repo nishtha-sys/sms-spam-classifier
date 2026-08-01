@@ -1,6 +1,7 @@
 # 📩 SpamShield: Classical ML vs Transformers
 
-Compares a classical ML pipeline (TF-IDF + Logistic Regression) against a fine-tuned DistilBERT transformer for SMS spam detection. A machine learning web app that classifies SMS messages as **Spam** or **Ham (Not Spam)** — with a live toggle to compare a classical ML pipeline against a fine-tuned transformer model.
+Compares a classical ML pipeline (TF-IDF + Logistic Regression) against a fine-tuned DistilBERT transformer for SMS spam detection. 
+A machine learning web app that classifies SMS messages as **Spam** or **Ham (Not Spam)** — with a live toggle to compare a classical ML pipeline against a fine-tuned transformer model.
 
 🔗 **Live App:** [nishtha-sms-spam-classifier.streamlit.app](https://nishtha-sms-spam-classifier.streamlit.app)
 
