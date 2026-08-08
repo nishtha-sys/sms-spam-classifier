@@ -1,6 +1,6 @@
 # 📩 SpamShield: Classical ML vs Transformers
 
-A machine learning web app that classifies SMS messages as **Spam** or **Ham (Not Spam)** — with a live toggle between a classical ML pipeline and a fine-tuned transformer, explainability, batch processing, and confidence-aware predictions.
+Built and deployed dual-model spam classifier (Logistic Regression + fine-tuned DistilBERT) achieving 98.3–99.0% accuracy; implemented confidence-thresholding to flag borderline predictions (45–55% range) for manual review instead of forcing binary calls, reducing false-positive risk in automated filtering — directly analogous to QA/compliance checks on flagged and content.
 
 🔗 **Live App:** [nishtha-sms-spam-classifier.streamlit.app](https://nishtha-sms-spam-classifier.streamlit.app)
 
